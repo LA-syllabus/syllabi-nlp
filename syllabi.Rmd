@@ -1,0 +1,46 @@
+---
+title: "syllabi"
+output: html_document
+---
+
+```{r}
+install.packages("pdftools")
+install.packages("tm")
+library(tm)
+library(pdftools)
+files <- list.files(pattern = "pdf$")
+opinion <- lapply(files,pdf_text)
+corp <- Corpus(VectorSource(opinion))
+substr(opinion[[1]][1], 1, regexpr("\r\n", opinion[[1]][1]))
+D1 <- read.csv("dataset.csv")
+D2 <- dplyr::select(D1, 2:14)
+library(corrplot)
+COR <- cor(D2, use = "complete.obs")
+corrplot(COR, order="AOE", method="circle", tl.pos="lt", type="upper",        
+         tl.col="black", tl.cex=0.6, tl.srt=45, 
+         addCoef.col="black", addCoefasPercent = TRUE,
+         sig.level=0.50, insig = "blank")
+D3 <- dplyr::select(D2,-6)
+D3 <- dplyr::select(D3,-9)
+COR2 <- cor(D3)
+corrplot(COR2, order="AOE", method="circle", tl.pos="lt", type="upper",        
+         tl.col="black", tl.cex=0.6, tl.srt=45, 
+         addCoef.col="black", addCoefasPercent = TRUE,
+         sig.level=0.50, insig = "blank")
+
+install.packages("PerformanceAnalytics")
+library("PerformanceAnalytics")
+chart.Correlation(D3, histogram=TRUE, pch=19)
+D4 <- t(D3)
+termDocMatrix <- as.matrix(D4)
+termDocMatrix[termDocMatrix>=1] <- 1
+termMatrix <- termDocMatrix %*% t(termDocMatrix)
+library(igraph)
+g <- graph.adjacency(termMatrix, weighted=T, mode = "undirected")
+g <- simplify(g)
+V(g)$label <- V(g)$name
+V(g)$degree <- degree(g)
+layout1 <- layout.fruchterman.reingold(g)
+plot(g, layout=layout1)
+```
+
